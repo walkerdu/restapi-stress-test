@@ -7,15 +7,6 @@ import (
 	"time"
 )
 
-type StressStat struct {
-	TotalQueryCnts int64
-	SuccessCnts    int64
-	FailedCnts     int64
-	FastestLatency int64
-	SlowestLatency int64
-	AvgLatency     int64
-}
-
 type StressParams struct {
 	Method   string
 	Url      string
@@ -89,6 +80,7 @@ func (mgrIns *ClientMgr) Run() {
 				log.Printf("[ERROR] NewClient failed, err=%s", err)
 				return
 			}
+			client.SetAuth(mgrIns.Params.UserName, mgrIns.Params.Password)
 
 			defer func() {
 				mgrIns.wg.Done()
@@ -97,9 +89,13 @@ func (mgrIns *ClientMgr) Run() {
 
 			for !mgrIns.Stop() {
 				beginT := time.Now()
-				client.DoHttp()
-				duration := time.Now().Sub(beginT)
 
+				_, err := client.DoHttp()
+
+				// 统计
+				mgrIns.stat.Stat(err == nil, int64(client.Duration))
+
+				duration := time.Now().Sub(beginT)
 				if duration >= time.Second {
 					continue
 				}
@@ -109,10 +105,19 @@ func (mgrIns *ClientMgr) Run() {
 		}()
 	}
 
+	go mgrIns.Stat()
+
 	// wait all goroutine done
 	mgrIns.wg.Wait()
 }
 
 func (mgrIns *ClientMgr) Stop() bool {
 	return mgrIns.stop
+}
+
+func (mgrIns *ClientMgr) Stat() {
+	for !mgrIns.Stop() {
+		log.Printf("[INFO] StressStat Info=%s", mgrIns.stat.String())
+		time.Sleep(time.Second)
+	}
 }
