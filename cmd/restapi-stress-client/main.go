@@ -19,12 +19,11 @@ Options:
 	--qps
 
 `
+	Usage = func() {
+		//fmt.Println(fmt.Sprintf("Usage of %s:\n", os.Args[0]))
+		fmt.Printf(usage, os.Args[0])
+	}
 )
-
-var Usage = func() {
-	//fmt.Println(fmt.Sprintf("Usage of %s:\n", os.Args[0]))
-	fmt.Printf(usage, os.Args[0])
-}
 
 func main() {
 	flag.Usage = Usage
