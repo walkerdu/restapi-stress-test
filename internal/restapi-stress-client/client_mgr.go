@@ -1,6 +1,9 @@
 package internal
 
 import (
+	"bytes"
+	"html/template"
+	"io/ioutil"
 	"log"
 	"strings"
 	"sync"
@@ -28,6 +31,9 @@ type ClientMgr struct {
 	wg   sync.WaitGroup // Wait some task finish
 	stop bool
 	stat StressStat
+
+	urlTemplate  *template.Template
+	bodyTemplate *template.Template
 }
 
 func NewClientMgr() (*ClientMgr, error) {
@@ -64,10 +70,40 @@ func (mgrIns *ClientMgr) InitParams() {
 			mgrIns.Params.Password = userInfo[1]
 		}
 	}
+
+	// support -d option input data file
+	if strings.HasPrefix(mgrIns.Params.Body, "@") {
+		dataFile := mgrIns.Params.Body[1:]
+		data, err := ioutil.ReadFile(dataFile)
+		if err != nil {
+			log.Printf("[ERROR] ReadFile:%s err=%s", dataFile, err)
+			return
+		}
+
+		mgrIns.Params.Body = string(data)
+	}
 }
-func (mgrIns *ClientMgr) Init() {
+func (mgrIns *ClientMgr) Init() error {
 	mgrIns.InitParams()
 	log.Printf("[DEBGU] StressParams=%+v", mgrIns.Params)
+
+	// url template初始化，添加指定的template function到template中
+	urlTemplate, err := template.New("Url").Funcs(funcsMap).Parse(mgrIns.Params.Url)
+	if err != nil {
+		log.Printf("[ERROR] template New failed, error=%s", err)
+		return err
+	}
+	mgrIns.urlTemplate = urlTemplate
+
+	// body template初始化，添加指定的template function到template中
+	bodyTemplate, err := template.New("Body").Funcs(funcsMap).Parse(mgrIns.Params.Body)
+	if err != nil {
+		log.Printf("[ERROR] template New failed, error=%s", err)
+		return err
+	}
+	mgrIns.bodyTemplate = bodyTemplate
+
+	return nil
 }
 
 func (mgrIns *ClientMgr) Run() {
@@ -88,6 +124,26 @@ func (mgrIns *ClientMgr) Run() {
 			}()
 
 			for !mgrIns.Stop() {
+
+				var urlBuffer, bodyBuffer bytes.Buffer
+
+				// 生成URL template 请求
+				if mgrIns.urlTemplate != nil {
+					if err := mgrIns.urlTemplate.Execute(&urlBuffer, nil); err != nil {
+						log.Printf("[ERROR] urlTemplate.Execute failed, err=%s", err)
+						break
+					}
+					client.SetUrl(urlBuffer.String())
+				}
+				// 生成body template 请求
+				if mgrIns.bodyTemplate != nil {
+					if err := mgrIns.bodyTemplate.Execute(&bodyBuffer, nil); err != nil {
+						log.Printf("[ERROR] bodyTemplate.Execute failed, err=%s", err)
+						break
+					}
+					client.SetBody(bodyBuffer.Bytes())
+				}
+
 				beginT := time.Now()
 
 				_, err := client.DoHttp()

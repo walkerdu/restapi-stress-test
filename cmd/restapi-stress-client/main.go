@@ -15,7 +15,7 @@ Options:
 	-X, --request <command>
 	-u, --user <user:password>
 	-H, --header <header,header,header>
-	-d, --data <data>
+	-d, --data <data> or  @data_file
 	--qps
 
 `
