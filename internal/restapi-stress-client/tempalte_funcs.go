@@ -9,10 +9,11 @@ import (
 )
 
 var funcsMap = template.FuncMap{
-	"random":   rand_,
+	"rand":     rand_,
 	"uuid":     uuid_,
 	"date":     date,
 	"randDate": randDate,
+	"now":      now,
 }
 
 // return [min, max)
@@ -31,4 +32,8 @@ func date(fmt string) string {
 
 func randDate(fmt string) string {
 	return time.Unix(rand.Int63n(time.Now().Unix()-94608000)+94608000, 0).Format(fmt)
+}
+
+func now() int64 {
+	return time.Now().Unix()
 }

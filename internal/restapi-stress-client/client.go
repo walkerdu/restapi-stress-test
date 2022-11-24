@@ -73,6 +73,7 @@ func (cIns *HttpClient) SetAuth(username, password string) {
 
 func (cIns *HttpClient) MakeHttpRequest() (*http.Request, error) {
 	log.Printf("[DEBUG] MakeHttpRequest url=%s", cIns.Url)
+	//log.Printf("[DEBUG] MakeHttpRequest body=%s", cIns.Body)
 
 	var reader *bytes.Reader
 	if cIns.Body != nil {
@@ -139,15 +140,17 @@ func (cIns *HttpClient) DoHttp() ([]byte, error) {
 		log.Printf("[ERROR] ReadAll() error=%s", err)
 		return nil, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("[ERROR] Response StatusCode=%d", resp.StatusCode)
+
+	// 2xx都表示成功
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		log.Printf("[ERROR] Response StatusCode=%d, Status=%s", resp.StatusCode, resp.Status)
 		return nil, ecode.Errorf(resp.StatusCode, string(respBytes))
 	}
 
 	cIns.Duration = time.Now().Sub(beginTime) / time.Millisecond
 	cIns.ContentLength = resp.ContentLength
 
-	log.Printf("[DEBUG] DoHttp respBytes=%s", respBytes)
+	log.Printf("[DEBUG] DoHttp StatusCode=%d respBytes=%s", resp.StatusCode, respBytes)
 
 	defer resp.Body.Close()
 	return respBytes, nil
