@@ -16,6 +16,7 @@ Options:
 	-u, --user <user:password>
 	-H, --header <header,header,header>
 	-d, --data <data> or  @data_file
+	-s, --sum <the sum of request>
 	--qps
 
 `
@@ -47,6 +48,8 @@ func main() {
 	flag.StringVar(&clientMgr.Params.Body, "d", "", "http request data")
 	flag.StringVar(&clientMgr.Params.Body, "data", "", "http request data")
 	flag.Int64Var(&clientMgr.Params.Qps, "qps", 1, "http request QPS")
+	flag.Int64Var(&clientMgr.Params.Sum, "s", 0, "the sum of http request counts")
+	flag.Int64Var(&clientMgr.Params.Sum, "sum", 0, "the sum of http request counts")
 
 	flag.Parse()
 

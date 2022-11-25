@@ -32,7 +32,7 @@ func NewClient(method, url string, headers map[string]string, body []byte) (*Htt
 
 	httpClient := &http.Client{
 		Transport: transport,
-		Timeout:   time.Second * 3,
+		Timeout:   time.Second * 10,
 	}
 
 	return &HttpClient{

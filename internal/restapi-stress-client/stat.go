@@ -6,7 +6,11 @@ import (
 )
 
 type StressStat struct {
-	TotalQueryCnts int64
+	TotalQueryCnts   int64
+	TotalSuccessCnts int64
+	TotalFailedCnts  int64
+
+	QueryCnts      int64
 	SuccessCnts    int64
 	FailedCnts     int64
 	FastestLatency int64
@@ -20,11 +24,15 @@ func (statIns *StressStat) Stat(success bool, latency int64) {
 	mu.Lock()
 	defer mu.Unlock()
 
+	statIns.QueryCnts += 1
 	statIns.TotalQueryCnts += 1
+
 	if success {
 		statIns.SuccessCnts += 1
+		statIns.TotalSuccessCnts += 1
 	} else {
 		statIns.FailedCnts += 1
+		statIns.TotalFailedCnts += 1
 	}
 
 	if statIns.FastestLatency == 0 || latency < statIns.FastestLatency {
@@ -42,7 +50,7 @@ func (statIns *StressStat) String() string {
 	defer mu.Unlock()
 
 	if statIns.TotalQueryCnts > 0 {
-		statIns.AvgLatency /= statIns.TotalQueryCnts
+		statIns.AvgLatency /= statIns.QueryCnts
 	}
 
 	var print string
@@ -53,7 +61,7 @@ func (statIns *StressStat) String() string {
 		print = string(body)
 	}
 
-	statIns.TotalQueryCnts = 0
+	statIns.QueryCnts = 0
 	statIns.SuccessCnts = 0
 	statIns.FailedCnts = 0
 	statIns.FastestLatency = 0

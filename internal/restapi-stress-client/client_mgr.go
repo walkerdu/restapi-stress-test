@@ -18,6 +18,7 @@ type StressParams struct {
 	UserName string
 	Password string
 	Qps      int64
+	Sum      int64
 }
 
 type ClientMgr struct {
@@ -106,6 +107,20 @@ func (mgrIns *ClientMgr) Init() error {
 	return nil
 }
 
+// 压测结束
+func (mgrIns *ClientMgr) IsFinish() bool {
+	if mgrIns.Params.Sum <= 0 {
+		return false
+	}
+
+	if mgrIns.stat.TotalQueryCnts >= mgrIns.Params.Sum {
+		log.Printf("[INFO] Finish %d Query", mgrIns.stat.TotalQueryCnts)
+		return true
+	}
+
+	return false
+}
+
 func (mgrIns *ClientMgr) Run() {
 	for loop_i := 1; loop_i <= int(mgrIns.Params.Qps); loop_i++ {
 		mgrIns.wg.Add(1)
@@ -124,6 +139,10 @@ func (mgrIns *ClientMgr) Run() {
 			}()
 
 			for !mgrIns.Stop() {
+
+				if mgrIns.IsFinish() {
+					break
+				}
 
 				var urlBuffer, bodyBuffer bytes.Buffer
 
