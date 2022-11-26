@@ -35,14 +35,17 @@ func (statIns *StressStat) Stat(success bool, latency int64) {
 		statIns.TotalFailedCnts += 1
 	}
 
-	if statIns.FastestLatency == 0 || latency < statIns.FastestLatency {
-		statIns.FastestLatency = latency
-	}
-	if latency > statIns.SlowestLatency {
-		statIns.SlowestLatency = latency
-	}
+	// only statistic latency data when success
+	if success {
+		if statIns.FastestLatency == 0 || latency < statIns.FastestLatency {
+			statIns.FastestLatency = latency
+		}
+		if latency > statIns.SlowestLatency {
+			statIns.SlowestLatency = latency
+		}
 
-	statIns.AvgLatency += latency
+		statIns.AvgLatency += latency
+	}
 }
 
 func (statIns *StressStat) String() string {
@@ -50,7 +53,7 @@ func (statIns *StressStat) String() string {
 	defer mu.Unlock()
 
 	if statIns.TotalQueryCnts > 0 {
-		statIns.AvgLatency /= statIns.QueryCnts
+		statIns.AvgLatency /= statIns.SuccessCnts
 	}
 
 	var print string
