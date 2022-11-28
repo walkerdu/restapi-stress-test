@@ -30,8 +30,8 @@ func date(fmt string) string {
 	return time.Now().Format(fmt)
 }
 
-func randDate(fmt string) string {
-	return time.Unix(rand.Int63n(time.Now().Unix()-94608000)+94608000, 0).Format(fmt)
+func randDate(offset int64, fmt string) string {
+	return time.Unix(rand.Int63n(time.Now().Unix()-offset)+offset, 0).Format(fmt)
 }
 
 func now() int64 {
