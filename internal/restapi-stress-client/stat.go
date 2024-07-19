@@ -52,7 +52,7 @@ func (statIns *StressStat) String() string {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if statIns.TotalQueryCnts > 0 {
+	if statIns.TotalQueryCnts > 0 && statIns.SuccessCnts > 0 {
 		statIns.AvgLatency /= statIns.SuccessCnts
 	}
 

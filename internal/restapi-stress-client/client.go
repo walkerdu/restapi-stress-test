@@ -150,7 +150,7 @@ func (cIns *HttpClient) DoHttp() ([]byte, error) {
 	cIns.Duration = time.Now().Sub(beginTime) / time.Millisecond
 	cIns.ContentLength = resp.ContentLength
 
-	log.Printf("[DEBUG] DoHttp StatusCode=%d respBytes=%s", resp.StatusCode, respBytes)
+	//log.Printf("[DEBUG] DoHttp StatusCode=%d respBytes=%s", resp.StatusCode, respBytes)
 
 	defer resp.Body.Close()
 	return respBytes, nil
